@@ -1,17 +1,19 @@
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import {Keyboard, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
 
 import Calculator from "./components/Calculator";
 import Header from "./components/Header";
 
 export default function App() {
   return (
-    <View style={styles.screen}>
-      <Header />
-      <Calculator />
-      <StatusBar style="auto" />
-    </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.screen}>
+        <Header />
+        <Calculator />
+        <StatusBar style="auto" />
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 

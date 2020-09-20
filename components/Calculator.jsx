@@ -1,5 +1,5 @@
-import React, {useState} from "react";
-import {Button, StyleSheet, Text, TextInput, View} from "react-native";
+import React, {useRef, useState} from "react";
+import {Alert, Animated, Button, StyleSheet, Text, TextInput, View} from "react-native";
 import CheckBox from "@react-native-community/checkbox";
 
 const Calculator = () => {
@@ -8,6 +8,8 @@ const Calculator = () => {
     const [tip, setTip] = useState("");
     const [splitBill, setSplitBill] = useState(0);
     const [addTip, setAddTip] = useState(false);
+
+    const slideAnim = useRef(new Animated.Value(50)).current;
 
     function handleBillChange(enteredBill) {
         setBill(enteredBill);
@@ -18,19 +20,17 @@ const Calculator = () => {
     }
 
     function handleCalculate() {
-        if (people == 0) {
-            setSplitBill("Please enter a number besides 0 for Total People");
+        if (people <= 0) {
+            Alert.alert("Invalid Input!", "Please enter a number greater than 0 for Total People.", [{style: "default"}])
         } else {
             let result = (bill / people);
-            console.log(result);
+
             if (!result) {
-                result = "Invalid Input. Check your values and try again!"
-                setSplitBill(result);
+                Alert.alert("Invalid Input!", "Check your values and try again.", [{style: "default"}])
                 return;
             }
 
-            if (tip) {
-                console.log(tip);
+            if (addTip) {
                 result += (bill * (tip / 100)) / people;
             }
 
@@ -39,6 +39,26 @@ const Calculator = () => {
     }
 
     function handleAddTip() {
+        if (!addTip) {
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 250,
+                useNativeDriver: false
+            }).start();
+        } else {
+            Animated.timing(slideAnim, {
+                toValue: 50,
+                duration: 250,
+                useNativeDriver: false
+            }).start();
+
+            setTip("");
+
+            if (bill && people) {
+                handleCalculate();
+            }
+        }
+        
         setAddTip(prevValue => !prevValue);
     }
 
@@ -49,26 +69,29 @@ const Calculator = () => {
     return (
         <View style={styles.calculator}>
             <View>
-                <TextInput style={styles.input} onChangeText={handleBillChange} placeholder="Total Bill" value={bill.toString()}/>
-                <TextInput style={styles.input} onChangeText={handlePeopleChange} placeholder="Total People" value={people.toString()} />
+                <TextInput style={styles.input} onChangeText={handleBillChange} placeholder="Total Bill" value={bill} keyboardType="numeric" />
+                <TextInput style={styles.input} onChangeText={handlePeopleChange} placeholder="Total People" value={people} keyboardType="numeric" />
             </View>
             <View style={styles.tipCheckBox}>
                 <CheckBox onChange={handleAddTip} value={addTip}/>
                 <Text>Include Tip?</Text>
             </View>
-            <View style={styles.tip}>
-                <TextInput style={styles.input} onChangeText={handleTipChange} placeholder="Tip Percentage" value={tip.toString()}/>
+            <View>
+                <TextInput style={styles.input} onChangeText={handleTipChange} placeholder="Tip Percentage" value={tip.toString()} keyboardType="numeric" />
             </View>
-            <View style={styles.button}>
-                <Button title="Calculate" onPress={handleCalculate} color="#28df99"/>
-            </View>
-            <Text style={styles.result}>$ {splitBill}</Text>
+            <Animated.View style={[styles.slideContainer, {bottom: slideAnim}]}>
+                <View style={styles.button}>
+                    <Button title="Calculate" onPress={handleCalculate} color="#28df99"/>
+                </View>
+                <Text style={styles.result}>$ {splitBill}</Text>
+            </Animated.View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     button: {
+        margin: 8,
         marginBottom: 32
     },
     calculator: {
@@ -88,8 +111,8 @@ const styles = StyleSheet.create({
         alignSelf: "center",
         fontSize: 32
     },
-    tip: {
-        // display: tip ? 
+    slideContainer: {
+        position: "relative"
     },
     tipCheckBox: {
         alignItems: "center",
